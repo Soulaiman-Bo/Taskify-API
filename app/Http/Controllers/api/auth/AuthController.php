@@ -35,7 +35,6 @@ class AuthController extends Controller
         ]);
     }
 
-
     public function login(Request $request)
     {
         $request->validate([
@@ -47,11 +46,10 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
-
             return response()->json([
                 'user' => $user,
                 'authorization' => [
-                    'token' => $user->createToken('ApiToken')->plainTextToken,
+                    'token' => $request->user()->createToken('ApiToken')->plainTextToken,
                     'type' => 'bearer',
                 ]
             ]);
@@ -61,9 +59,9 @@ class AuthController extends Controller
         ], 401);
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        Auth::user()->tokens()->delete();
+        $request->user()->tokens()->delete();
         return response()->json([
             'message' => 'Successfully logged out',
         ]);
@@ -77,4 +75,5 @@ class AuthController extends Controller
             'access_token' => $request->user()->createToken('api')->plainTextToken,
         ]);
     }
+
 }
