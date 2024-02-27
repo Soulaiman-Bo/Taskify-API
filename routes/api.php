@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\api\auth\AuthController;
+use App\Http\Controllers\api\v1\CompleteTaskController;
 use App\Http\Controllers\api\v1\TaskController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -33,4 +34,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/tasks/{id}', [TaskController::class, 'update']);
     Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
     Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
+    Route::post('/tasks/{id}/done', CompleteTaskController::class);
+
 });
