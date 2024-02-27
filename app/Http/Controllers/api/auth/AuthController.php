@@ -15,6 +15,36 @@ class AuthController extends Controller
         $this->middleware('auth:sanctum', ['except' => ['login', 'register']]);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/register",
+     *     summary="Register a new user",
+     *     @OA\Parameter(
+     *         name="name",
+     *         in="query",
+     *         description="User's name",
+     *         required=true,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="email",
+     *         in="query",
+     *         description="User's email",
+     *         required=true,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="password",
+     *         in="query",
+     *         description="User's password",
+     *         required=true,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(response="201", description="User registered successfully"),
+     *     @OA\Response(response="422", description="Validation errors")
+     * )
+     */
+
     public function register(Request $request)
     {
         $request->validate([
@@ -35,7 +65,6 @@ class AuthController extends Controller
         ]);
     }
 
-
     public function login(Request $request)
     {
         $request->validate([
@@ -47,11 +76,10 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
-
             return response()->json([
                 'user' => $user,
                 'authorization' => [
-                    'token' => $user->createToken('ApiToken')->plainTextToken,
+                    'token' => $request->user()->createToken('ApiToken')->plainTextToken,
                     'type' => 'bearer',
                 ]
             ]);
@@ -61,9 +89,9 @@ class AuthController extends Controller
         ], 401);
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        Auth::user()->tokens()->delete();
+        $request->user()->tokens()->delete();
         return response()->json([
             'message' => 'Successfully logged out',
         ]);
