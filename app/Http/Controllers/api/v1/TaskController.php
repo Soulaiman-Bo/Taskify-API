@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api\v1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreTaskRequest;
 use App\Http\Resources\TaskResource;
 use App\Models\Task;
 use App\Models\User;
@@ -36,7 +37,7 @@ class TaskController extends Controller
         return response()->json(['task' => $formattedTask]);
     }
 
-    public function store(Request $request)
+    public function store(StoreTaskRequest $request)
     {
         $userId = auth()->id();
 
