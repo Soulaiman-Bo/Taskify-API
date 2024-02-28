@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\api\v1;
 
+use App\Contract\TaskRepositoryInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Resources\TaskResource;
@@ -12,27 +13,36 @@ use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
+
+    protected $Taskrepository;
+
+    public function __construct(TaskRepositoryInterface $repository)
+    {
+        $this->Taskrepository = $repository;
+    }
+
+
     public function index()
     {
         $user = auth()->user();
-        $tasks = $user->tasks;
-        $formattedTasks = TaskResource::collection($tasks);
-        return response()->json(['tasks' => $formattedTasks]);
+
+        $task = $this->Taskrepository->showAllTasks($user);
+
+        return response()->json(['tasks' => $task]);
     }
 
     public function show($id)
     {
-        $task = Task::findOrFail($id);
-
-        $formattedTask = new TaskResource($task);
-
-
+        $task = $this->Taskrepository->showTask($id);
 
         try {
             $this->authorize('view', $task);
         } catch (AuthorizationException $e) {
             return response()->json(['error' => 'Unauthorized. You do not have permission to perform this action.'], 403);
         }
+
+        $formattedTask = new TaskResource($task);
+
 
         return response()->json(['task' => $formattedTask]);
     }
@@ -41,15 +51,9 @@ class TaskController extends Controller
     {
         $userId = auth()->id();
 
-        $task = User::findOrFail($userId)->tasks()->create([
-            'title' => $request->input('title'),
-            'body' => $request->input('body'),
-            'status' => 'to-do',
-            'user_id' => $userId,
-        ]);
+        $task = $this->Taskrepository->storeTask($request, $userId);
 
         $formattedTask = new TaskResource($task);
-
 
         return response()->json(['task' => $formattedTask], 201);
     }
@@ -64,24 +68,23 @@ class TaskController extends Controller
             return response()->json(['error' => 'Unauthorized. You do not have permission to perform this action.'], 403);
         }
 
-        $task->update($request->all());
+        $tasks = $this->Taskrepository->updateTask($request, $task);
 
-        $formattedTask = new TaskResource($task);
-
-
-        return response()->json(['task' => $formattedTask]);
+        return response()->json(['task' => $tasks]);
     }
 
     public function destroy($id)
     {
         $task = Task::findOrFail($id);
+
         try {
             $this->authorize('delete', $task);
         } catch (AuthorizationException $e) {
             return response()->json(['error' => 'Unauthorized. You do not have permission to perform this action.'], 403);
         }
 
-        $task->delete();
+        $this->Taskrepository->deleteTask($task);
+
         return response()->json(['message' => 'Task deleted successfully']);
     }
 }
